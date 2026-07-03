@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: kindergarten-class-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kindergarten-class-db
+          property: connectionString
+
+databases:
+  - name: kindergarten-class-db
+    plan: free
+    ipAllowList: []
