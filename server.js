@@ -3,8 +3,8 @@
  *  存储：PostgreSQL（Render 免费层无持久磁盘）
  * ============================================================ */
 const express = require('express');
+const cors = require('cors');
 const { Pool } = require('pg');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,13 +19,7 @@ const pool = new Pool({
 app.use(express.json());
 
 // CORS 允许 COS 前端跨域访问
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+app.use(cors());
 
 // ========== 数据库初始化 ==========
 

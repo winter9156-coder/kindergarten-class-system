@@ -3,6 +3,7 @@ services:
     name: kindergarten-class-api
     runtime: node
     plan: free
+    region: singapore
     buildCommand: npm install
     startCommand: node server.js
     envVars:
@@ -14,4 +15,5 @@ services:
 databases:
   - name: kindergarten-class-db
     plan: free
+    region: singapore
     ipAllowList: []
