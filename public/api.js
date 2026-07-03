@@ -1,17 +1,15 @@
 /* ============================================================
  *  前后端 API 桥接（替换 localStorage）
- *  自动检测：本地开发 / 线上部署（Render 后端 + COS 前端）
+ *  前后端同源部署：Render 后端直接提供前端页面 + API
  * ============================================================ */
 
-// 后端 API 地址（Render 部署）
-const RENDER_URL = 'https://kindergarten-class-api.onrender.com';
-
+// API_BASE：前后端同源时用空字符串（相对路径），跨域时用完整 Render URL
 const API_BASE = (function() {
     const host = window.location.hostname;
-    // 本地开发 → 用当前地址（Express 服务同时提供前端+API）
-    if (host === 'localhost' || host === '127.0.0.1') return '';
-    // COS / 线上部署 → 使用 Render 后端
-    return RENDER_URL;
+    // 本地开发 / 同源部署 → 相对路径即可
+    if (host === 'localhost' || host === '127.0.0.1' || host.includes('onrender.com')) return '';
+    // 其他跨域部署（如 COS）→ 使用 Render 后端完整 URL
+    return 'https://kindergarten-class-api.onrender.com';
 })();
 
 // 提取当前页面 URL 中的认证参数
