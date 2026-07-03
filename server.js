@@ -4,6 +4,7 @@
  * ============================================================ */
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
@@ -18,8 +19,11 @@ const pool = new Pool({
 // 解析 JSON body
 app.use(express.json());
 
-// CORS 允许 COS 前端跨域访问
+// CORS 允许跨域访问
 app.use(cors());
+
+// 静态文件服务（前端页面）
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ========== 数据库初始化 ==========
 

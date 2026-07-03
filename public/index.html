@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>幼儿园班级组合系统</title>
+    <style>
+        /* ===== 全局重置 & 基础样式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #fdf6f0 0%, #f0e6d8 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #app {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.80);
+            backdrop-filter: blur(16px);
+            border-radius: 48px 48px 32px 32px;
+            padding: 30px 35px 40px;
+            box-shadow: 0 20px 60px rgba(120, 80, 60, 0.15),
+                        0 4px 20px rgba(120, 80, 60, 0.08);
+            border: 1px solid rgba(255, 215, 190, 0.4);
+            transition: all 0.3s ease;
+            animation: floatApp 6s ease-in-out infinite;
+        }
+        @keyframes floatApp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        /* ===== 页面切换 ===== */
+        .page {
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 头部 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 2px dashed #f0d5c0;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #5e3e2b;
+            letter-spacing: 1px;
+        }
+        .header h1 span {
+            color: #d48b7a;
+        }
+        .header .user-badge {
+            background: #fff3ed;
+            padding: 8px 22px;
+            border-radius: 40px;
+            font-size: 15px;
+            color: #5e3e2b;
+            border: 1px solid #eccfc0;
+            box-shadow: 0 2px 6px rgba(180, 120, 90, 0.08);
+        }
+        .header .user-badge strong {
+            color: #b5654b;
+            font-weight: 700;
+        }
+        .btn-logout {
+            background: #f0d5c0;
+            border: none;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            color: #5e3e2b;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            margin-left: 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(180, 120, 90, 0.08);
+        }
+        .btn-logout:hover {
+            background: #e6bfa8;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(180, 120, 90, 0.15);
+        }
+
+        /* ===== 通用按钮 ===== */
+        .btn {
+            display: inline-block;
+            padding: 10px 34px;
+            border-radius: 40px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            background: #e8d5c8;
+            color: #4d3425;
+            box-shadow: 0 4px 12px rgba(150, 100, 70, 0.10),
+                        0 2px 4px rgba(150, 100, 70, 0.06);
+            position: relative;
+        }
+        .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(150, 100, 70, 0.18),
+                        0 6px 12px rgba(150, 100, 70, 0.10);
+        }
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: #d48b7a;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(200, 120, 90, 0.30),
+                        0 3px 8px rgba(200, 120, 90, 0.15);
+        }
+        .btn-primary:hover {
+            background: #c97b68;
+            transform: translateY(-5px);
+            box-shadow: 0 14px 32px rgba(200, 120, 90, 0.35),
+                        0 8px 16px rgba(200, 120, 90, 0.18);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-success {
+            background: #8fb5a3;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(120, 160, 130, 0.30),
+                        0 3px 8px rgba(120, 160, 130, 0.15);
+        }
+        .btn-success:hover {
+            background: #7da392;
+            transform: translateY(-5px);
+            box-shadow: 0 14px 32px rgba(120, 160, 130, 0.35),
+                        0 8px 16px rgba(120, 160, 130, 0.18);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #d48b7a;
+            color: #d48b7a;
+            box-shadow: 0 2px 8px rgba(212, 139, 122, 0.08);
+        }
+        .btn-outline:hover {
+            background: #d48b7a;
+            color: #fff;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(212, 139, 122, 0.25);
+        }
+        .btn-small {
+            padding: 6px 18px;
+            font-size: 13px;
+        }
+
+        /* ===== 登录页 ===== */
+        .login-box {
+            max-width: 580px;
+            margin: 20px auto 10px;
+            text-align: center;
+        }
+        .login-box .logo-icon {
+            width: 160px;
+            height: auto;
+            margin-bottom: 10px;
+            object-fit: contain;
+            animation: floatLogo 4s ease-in-out infinite;
+        }
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .login-box h2 {
+            font-size: 30px;
+            color: #4d3425;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .login-box p {
+            color: #7a5f4e;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .role-selector {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .role-card {
+            background: #fff9f5;
+            padding: 20px 28px;
+            border-radius: 28px;
+            border: 2px solid #f0ddd0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            min-width: 130px;
+            box-shadow: 0 4px 12px rgba(150, 100, 70, 0.06),
+                        0 1px 3px rgba(150, 100, 70, 0.04);
+        }
+        .role-card:hover {
+            border-color: #d48b7a;
+            transform: translateY(-8px);
+            box-shadow: 0 16px 36px rgba(180, 120, 90, 0.14),
+                        0 6px 14px rgba(180, 120, 90, 0.08);
+        }
+        .role-card.active {
+            border-color: #d48b7a;
+            background: #fceee8;
+            box-shadow: 0 8px 24px rgba(200, 120, 90, 0.15),
+                        0 3px 8px rgba(200, 120, 90, 0.10);
+            transform: translateY(-3px);
+        }
+        .role-card .label {
+            font-weight: 600;
+            color: #4d3425;
+            font-size: 17px;
+            letter-spacing: 1px;
+        }
+        .login-form {
+            background: #fff9f5;
+            border-radius: 32px;
+            padding: 28px 32px 32px;
+            box-shadow: 0 8px 24px rgba(150, 100, 70, 0.08),
+                        0 2px 8px rgba(150, 100, 70, 0.04);
+            transition: all 0.3s ease;
+        }
+        .login-form:hover {
+            box-shadow: 0 14px 36px rgba(150, 100, 70, 0.12),
+                        0 4px 14px rgba(150, 100, 70, 0.06);
+        }
+        .login-form label {
+            display: block;
+            font-weight: 600;
+            color: #4d3425;
+            margin-bottom: 6px;
+            text-align: left;
+            font-size: 15px;
+        }
+        .login-form select {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 30px;
+            border: 2px solid #eccfc0;
+            font-size: 16px;
+            background: #fffcf9;
+            color: #3d2a1e;
+            outline: none;
+            transition: 0.2s;
+            margin-bottom: 20px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23b5654b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+        }
+        .login-form select:focus {
+            border-color: #d48b7a;
+            box-shadow: 0 0 0 4px rgba(212, 139, 122, 0.12);
+        }
+        .login-form .pwd-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 30px;
+            border: 2px solid #eccfc0;
+            font-size: 18px;
+            background: #fffcf9;
+            color: #3d2a1e;
+            outline: none;
+            transition: 0.2s;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .login-form .pwd-input:focus {
+            border-color: #d48b7a;
+            box-shadow: 0 0 0 4px rgba(212, 139, 122, 0.12);
+        }
+        .login-form .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+        }
+        .login-hint {
+            margin-top: 14px;
+            font-size: 14px;
+            color: #9a7a6a;
+        }
+
+        /* ===== 选择页面通用 ===== */
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #4d3425;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title .badge {
+            background: #d48b7a;
+            color: #fff;
+            font-size: 14px;
+            padding: 2px 16px;
+            border-radius: 30px;
+            font-weight: 500;
+        }
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        @media (max-width: 860px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card-panel {
+            background: #fffbf8;
+            border-radius: 28px;
+            padding: 22px 24px 26px;
+            border: 1px solid #f0ddd0;
+            box-shadow: 0 4px 16px rgba(150, 100, 70, 0.05),
+                        0 1px 4px rgba(150, 100, 70, 0.03);
+            transition: all 0.3s ease;
+        }
+        .card-panel:hover {
+            box-shadow: 0 10px 30px rgba(150, 100, 70, 0.10),
+                        0 4px 12px rgba(150, 100, 70, 0.06);
+            transform: translateY(-3px);
+        }
+        .card-panel h3 {
+            font-size: 18px;
+            color: #5e3e2b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-panel h3 .count {
+            font-size: 14px;
+            background: #f0ddd0;
+            padding: 0 12px;
+            border-radius: 30px;
+            color: #5e3e2b;
+            font-weight: 500;
+        }
+        .check-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .check-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 15px;
+            color: #3d2a1e;
+            cursor: pointer;
+            padding: 4px 10px 4px 6px;
+            border-radius: 30px;
+            transition: 0.15s;
+            background: #fcf6f1;
+            border: 1px solid transparent;
+        }
+        .check-group label:hover {
+            background: #f5e8df;
+            border-color: #eccfc0;
+        }
+        .check-group label.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+        .check-group input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            accent-color: #d48b7a;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .check-group input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+        }
+        .group-box {
+            background: #fcf6f1;
+            border-radius: 18px;
+            padding: 16px 18px 18px;
+            margin-bottom: 16px;
+            border-left: 4px solid #d48b7a;
+        }
+        .group-box .group-label {
+            font-weight: 600;
+            color: #5e3e2b;
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .group-box .group-label .selected-names {
+            font-weight: 400;
+            color: #8a6b5a;
+            font-size: 14px;
+        }
+        .group-box .check-group {
+            max-height: 180px;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid #f0ddd0;
+        }
+        .status-msg {
+            flex: 1;
+            font-size: 14px;
+            color: #7a5f4e;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-msg.success {
+            color: #5f8b78;
+        }
+        .status-msg.error {
+            color: #c97b68;
+        }
+
+        /* ===== 园长页面 ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: #fffbf8;
+            padding: 18px 20px;
+            border-radius: 24px;
+            border: 1px solid #f0ddd0;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(150, 100, 70, 0.05);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(150, 100, 70, 0.12);
+        }
+        .stat-card .num {
+            font-size: 34px;
+            font-weight: 700;
+            color: #d48b7a;
+        }
+        .stat-card .lbl {
+            font-size: 14px;
+            color: #7a5f4e;
+        }
+        .result-table-wrap {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: #fffbf8;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #f0ddd0;
+        }
+        .result-table th {
+            background: #f5e8df;
+            color: #4d3425;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .result-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f5ece4;
+            vertical-align: top;
+        }
+        .result-table tr:last-child td {
+            border-bottom: none;
+        }
+        .result-table .tag {
+            display: inline-block;
+            background: #f0ddd0;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 2px 4px 2px 0;
+            color: #4d3425;
+        }
+        .result-table .tag.leader {
+            background: #d48b7a;
+            color: #fff;
+        }
+        .result-table .tag.teacher {
+            background: #b5cfc0;
+            color: #2d4a3a;
+        }
+        .result-table .tag.group-tag {
+            background: #e8d5c8;
+            font-weight: 500;
+        }
+        .empty-hint {
+            color: #a08070;
+            font-style: italic;
+            padding: 10px 0;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: #4d3425;
+            color: #fff;
+            padding: 16px 28px;
+            border-radius: 30px;
+            font-size: 15px;
+            box-shadow: 0 12px 40px rgba(60, 40, 30, 0.20);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(-20px) scale(0.96);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 420px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .toast.success {
+            background: #5f8b78;
+        }
+        .toast.error {
+            background: #c97b68;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 600px) {
+            #app {
+                padding: 16px 14px 24px;
+                border-radius: 28px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .role-card {
+                min-width: 100px;
+                padding: 14px 18px;
+            }
+            .login-form {
+                padding: 20px 16px 24px;
+            }
+            .grid-2col {
+                gap: 16px;
+            }
+            .card-panel {
+                padding: 16px 14px 18px;
+            }
+            .section-title {
+                font-size: 18px;
+            }
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn {
+                text-align: center;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* 滚动条美化 */
+        .check-group::-webkit-scrollbar {
+            width: 5px;
+        }
+        .check-group::-webkit-scrollbar-track {
+            background: #f5ece4;
+            border-radius: 10px;
+        }
+        .check-group::-webkit-scrollbar-thumb {
+            background: #dcc4b8;
+            border-radius: 10px;
+        }
+
+        /* 分组标题样式 */
+        .group-divider {
+            width: 100%;
+            font-weight: 600;
+            color: #5e3e2b;
+            padding: 6px 0 2px 0;
+            border-bottom: 1px dashed #eccfc0;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .group-divider .badge-group {
+            background: #d48b7a;
+            color: #fff;
+            border-radius: 20px;
+            padding: 0 12px;
+            font-size: 12px;
+        }
+
+        /* ===== 感谢页面 ===== */
+        .thanks-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(60, 40, 30, 0.65);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        .thanks-card {
+            background: #fffdf9;
+            border-radius: 36px;
+            padding: 48px 40px 40px;
+            text-align: center;
+            box-shadow: 0 24px 64px rgba(80, 50, 30, 0.25);
+            max-width: 460px;
+            width: 90%;
+            animation: thanksBounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        @keyframes thanksBounce {
+            0% { transform: scale(0.85); opacity: 0; }
+            60% { transform: scale(1.04); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .thanks-card img {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+        .thanks-card h2 {
+            font-size: 28px;
+            color: #4d3425;
+            margin-bottom: 12px;
+        }
+        .thanks-card p {
+            color: #7a5f4e;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 28px;
+        }
+        .thanks-card .btn {
+            padding: 12px 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- ========== TOAST ========== -->
+        <div id="toast" class="toast"></div>
+
+        <!-- ========== 页面：登录 ========== -->
+        <div id="page-login" class="page active">
+            <div class="login-box">
+                <img src="logo.png" class="logo-icon" alt="蒲英向阳">
+                <h2>班级组合小站</h2>
+                <p>班长 · 教师 双向选择系统</p>
+
+                <div class="role-selector">
+                    <div class="role-card active" data-role="leader">
+                        <span class="label">班长</span>
+                    </div>
+                    <div class="role-card" data-role="teacher">
+                        <span class="label">教师</span>
+                    </div>
+                    <div class="role-card" onclick="location.href='admin.html'" style="cursor:pointer;">
+                        <span class="label">后台管理</span>
+                    </div>
+                </div>
+
+                <div class="login-form" id="loginForm">
+                    <label for="loginSelect">选择你的名字</label>
+                    <select id="loginSelect">
+                        <option value="">—— 请选择 ——</option>
+                    </select>
+                    <label for="loginPwd">输入你的密码（6位数字+字母）</label>
+                    <input type="password" id="loginPwd" class="pwd-input" placeholder="请输入密码" maxlength="6" autocomplete="off" />
+                    <button class="btn btn-primary" id="loginBtn">进入系统 →</button>
+                    <div class="login-hint" id="loginHint">请先选择角色和姓名，输入密码后进入</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 页面：班长选择 ========== -->
+        <div id="page-leader" class="page">
+            <div class="header">
+                <h1><span>班长</span> · 选择搭档</h1>
+                <div>
+                    <span class="user-badge"><strong id="leaderNameDisplay">——</strong></span>
+                    <button class="btn-logout" onclick="goHome()">退出</button>
+                </div>
+            </div>
+            <p style="color:#7a5f4e; margin-bottom: 20px;">
+                请你从<strong>第一组教师</strong>中选择 <strong>至少 2 人</strong>，其余可从任意组选择，共选 6 人。
+            </p>
+
+            <div class="card-panel" style="margin-bottom: 20px;">
+                <h3>选择教师 <span class="count">已选 <span id="leaderSelectedCount">0</span> / 6 · 第一组 <span id="leaderGroup1Count">0</span> / 2</span></h3>
+                <div class="check-group" id="leaderTeacherCheckGroup">
+                    <!-- 由 JS 动态渲染 -->
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="status-msg" id="leaderStatus">已选 0 / 6 人</div>
+                <button class="btn btn-success" id="leaderSubmitBtn">提交选择</button>
+                <button class="btn btn-outline btn-small" onclick="goHome()">返回</button>
+            </div>
+        </div>
+
+        <!-- ========== 页面：教师选择 ========== -->
+        <div id="page-teacher" class="page">
+            <div class="header">
+                <h1><span>教师</span> · 选择搭档</h1>
+                <div>
+                    <span class="user-badge"><strong id="teacherNameDisplay">——</strong></span>
+                    <button class="btn-logout" onclick="goHome()">退出</button>
+                </div>
+            </div>
+            <p style="color:#7a5f4e; margin-bottom: 20px;">
+                请选择 <strong>3 位</strong> 心仪的班长，以及 <strong>3 位</strong> 想要搭档的教师（不含自己）。
+            </p>
+
+            <div class="grid-2col">
+                <div class="card-panel">
+                    <h3>选择班长 <span class="count">已选 <span id="teacherLeaderCount">0</span> / 3</span></h3>
+                    <div class="check-group" id="teacherLeaderCheckGroup">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </div>
+                <div class="card-panel">
+                    <h3>选择组员教师 <span class="count">已选 <span id="teacherTeacherCount">0</span> / 3</span></h3>
+                    <div class="check-group" id="teacherTeacherCheckGroup">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="status-msg" id="teacherStatus">已选 0 位班长 + 0 位教师</div>
+                <button class="btn btn-success" id="teacherSubmitBtn">提交选择</button>
+                <button class="btn btn-outline btn-small" onclick="goHome()">返回</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        // ======================================================================
+        //  数据定义（已移除"富佳妍"，新增"张冉"，教师分两组）
+        // ======================================================================
+
+        const LEADER_NAMES = [
+            '刘沂柠', '杨柳', '郭宇涵', '张雨晴', '李昕怡',
+            '蔡涵', '芦丽', '王文雪', '徐可新', '张建梅', '孙乐'
+        ];
+
+        const TEACHER_NAMES = [
+            '李亚洁', '纪思曼', '姜媛', '鲁晨曦', '李梦',
+            '尹亭蕊', '马正颖', '张斯婕', '苏琦蕊',
+            '李雪彤', '邢佳杰', '王旻姣', '刘茜', '谷雨',
+            '王玉', '徐佳', '程紫玉', '田鑫颖', '李一帆',
+            '伊金宝', '张淼', '张冉', '李晓娇', '周岩'
+        ];
+
+        // ----- 教师分组 -----
+        const GROUP1_TEACHERS = [
+            '李梦', '王旻姣', '伊金宝', '刘茜', '鲁晨曦',
+            '姜媛', '邢佳杰', '田鑫颖', '王玉', '周岩',
+            '马正颖', '李一帆'
+        ];
+        const GROUP2_TEACHERS = TEACHER_NAMES.filter(name => !GROUP1_TEACHERS.includes(name));
+
+        const TEACHER_GROUPS = [
+            { label: '第一组教师', teachers: GROUP1_TEACHERS },
+            { label: '第二组教师', teachers: GROUP2_TEACHERS }
+        ];
+
+        // ===== 个人密码映射（6位数字+小写字母） =====
+        const USER_PASSWORDS = {
+            // 班长密码
+            '刘沂柠': 'n098qo', '杨柳': 'w3f17i', '郭宇涵': '07nj7l', '张雨晴': 't0tpc5', '李昕怡': 'yc33ul',
+            '蔡涵': 'tqjzdj', '芦丽': 'tmvkp1', '王文雪': '8a283a', '徐可新': 'mdd79x', '张建梅': 'nl6q5d', '孙乐': 'znkour',
+            // 教师密码
+            '李亚洁': '81b97x', '纪思曼': 'vbnewg', '姜媛': '98k9lw', '鲁晨曦': 'e7zi31', '李梦': '3msf2d',
+            '尹亭蕊': 'zjyu0p', '马正颖': 'oj9n4f', '张斯婕': 'gyv9i6', '苏琦蕊': 'wvanl5',
+            '李雪彤': 'rjsj0b', '邢佳杰': '0xvtb2', '王旻姣': 'vy3h2r', '刘茜': 'r4hj9v', '谷雨': 'f7jq7b',
+            '王玉': 'znfi48', '徐佳': 'cl872m', '程紫玉': '8wu28o', '田鑫颖': '74xkhs', '李一帆': 't63ffg',
+            '伊金宝': 'qoz3ec', '张淼': 'v86gfa', '张冉': '8xfvj1', '李晓娇': 'zuyxu5', '周岩': 'h7e2dz'
+        };
+
+        // 存储 key（保留兼容）
+        const STORAGE_KEY_LEADER = 'kindergarten_leader_choices';
+        const STORAGE_KEY_TEACHER = 'kindergarten_teacher_choices';
+
+        // ======================================================================
+        //  数据读写（切换为后端 API）
+        // ======================================================================
+
+        async function getLeaderData() {
+            const data = await apiGetAllData();
+            return data?.leaders || {};
+        }
+
+        async function saveLeaderData(name, selected) {
+            return await apiSaveLeader(name, selected);
+        }
+
+        async function getTeacherData() {
+            const data = await apiGetAllData();
+            return data?.teachers || {};
+        }
+
+        async function saveTeacherData(name, leaders, teachers) {
+            return await apiSaveTeacher(name, leaders, teachers);
+        }
+
+        // 感谢页
+        function showThanks() {
+            document.getElementById('thanksOverlay').style.display = 'flex';
+        }
+
+        function closeThanks() {
+            document.getElementById('thanksOverlay').style.display = 'none';
+            goHome();
+        }
+
+        // ======================================================================
+        //  全局状态
+        // ======================================================================
+
+        let currentRole = 'leader'; // 'leader' | 'teacher' | 'director'
+        let currentName = '';
+
+        // 班长选择暂存（改为 selected 数组）
+        let leaderTempChoices = {
+            selected: [] // 最多6人
+        };
+
+        // 教师选择暂存
+        let teacherTempChoices = {
+            leaders: [],
+            teachers: []
+        };
+
+        // ======================================================================
+        //  Toast
+        // ======================================================================
+
+        function showToast(msg, type = 'info', duration = 2800) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast';
+            if (type === 'success') el.classList.add('success');
+            if (type === 'error') el.classList.add('error');
+            el.classList.add('show');
+            clearTimeout(el._timer);
+            el._timer = setTimeout(() => el.classList.remove('show'), duration);
+        }
+
+        // ======================================================================
+        //  页面切换
+        // ======================================================================
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function goHome() {
+            currentRole = 'leader';
+            currentName = '';
+            showPage('page-login');
+            document.getElementById('loginSelect').value = '';
+            document.getElementById('loginPwd').value = '';
+            document.getElementById('loginHint').textContent = '请先选择角色和姓名，输入密码后进入';
+            document.querySelectorAll('.role-card[data-role]').forEach(c => c.classList.remove('active'));
+            document.querySelector('.role-card[data-role="leader"]').classList.add('active');
+            updateLoginSelect('leader');
+        }
+
+        // ======================================================================
+        //  登录逻辑
+        // ======================================================================
+
+        function updateLoginSelect(role) {
+            const sel = document.getElementById('loginSelect');
+            sel.innerHTML = '<option value="">—— 请选择 ——</option>';
+            let names = [];
+            if (role === 'leader') names = LEADER_NAMES;
+            else if (role === 'teacher') names = TEACHER_NAMES;
+            names.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                opt.textContent = n;
+                sel.appendChild(opt);
+            });
+            document.getElementById('loginHint').textContent = '请选择你的名字，输入密码后进入';
+        }
+
+        document.querySelectorAll('.role-card[data-role]').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.role-card[data-role]').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const role = this.dataset.role;
+                currentRole = role;
+                updateLoginSelect(role);
+            });
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const sel = document.getElementById('loginSelect');
+            const val = sel.value;
+            const pwd = document.getElementById('loginPwd').value.trim();
+
+            if (!val) {
+                showToast('请先选择姓名！', 'error');
+                return;
+            }
+
+            if (!pwd) {
+                showToast('请输入你的密码！', 'error');
+                return;
+            }
+
+            // 密码验证
+            const expectedPwd = USER_PASSWORDS[val];
+            if (!expectedPwd || pwd !== expectedPwd) {
+                showToast('密码错误，请检查后重试！', 'error');
+                document.getElementById('loginPwd').value = '';
+                document.getElementById('loginPwd').focus();
+                return;
+            }
+
+            if (!LEADER_NAMES.includes(val) && !TEACHER_NAMES.includes(val)) {
+                showToast('请选择有效的姓名', 'error');
+                return;
+            }
+
+            currentName = val;
+
+            if (currentRole === 'leader') {
+                if (!LEADER_NAMES.includes(val)) {
+                    showToast('请选择班长名单中的姓名', 'error');
+                    return;
+                }
+                showPage('page-leader');
+                document.getElementById('leaderNameDisplay').textContent = val;
+                loadLeaderChoices(val);
+            } else if (currentRole === 'teacher') {
+                if (!TEACHER_NAMES.includes(val)) {
+                    showToast('请选择教师名单中的姓名', 'error');
+                    return;
+                }
+                showPage('page-teacher');
+                document.getElementById('teacherNameDisplay').textContent = val;
+                loadTeacherChoices(val);
+            }
+        });
+
+        document.getElementById('loginSelect').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('loginPwd').focus();
+        });
+        document.getElementById('loginPwd').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+
+        updateLoginSelect('leader');
+
+        // ======================================================================
+        //  班长选择页面（新版：直接选6人，无分组限制）
+        // ======================================================================
+
+        async function loadLeaderChoices(name) {
+            const allData = await getLeaderData();
+            const saved = allData[name] || {};
+
+            let selected = [];
+            // 兼容旧数据（groups 数组）
+            if (saved.groups && Array.isArray(saved.groups)) {
+                // 扁平化所有组，去重，取前6个（实际上应正好6个）
+                const flat = saved.groups.flat();
+                const unique = [...new Set(flat)];
+                selected = unique.slice(0, 6);
+            } else if (saved.selected && Array.isArray(saved.selected)) {
+                selected = saved.selected.slice(0, 6);
+            }
+
+            // 过滤掉不在当前教师名单中的（如已删除的富佳妍）
+            const validTeachers = new Set(TEACHER_NAMES);
+            selected = selected.filter(t => validTeachers.has(t));
+
+            leaderTempChoices.selected = selected;
+            renderLeaderSelection();
+            updateLeaderStatus();
+        }
+
+        function renderLeaderSelection() {
+            const container = document.getElementById('leaderTeacherCheckGroup');
+            container.innerHTML = '';
+
+            const selected = leaderTempChoices.selected;
+            const group1SelectedCount = selected.filter(t => GROUP1_TEACHERS.includes(t)).length;
+
+            // 遍历分组显示
+            TEACHER_GROUPS.forEach(group => {
+                const isGroup1 = group.label.includes('第一组');
+                const divider = document.createElement('div');
+                divider.className = 'group-divider';
+                // 第一组显示已选计数
+                if (isGroup1) {
+                    divider.innerHTML = `<span>${group.label}（至少选2人）</span><span class="badge-group">已选 ${group1SelectedCount} / ${group.teachers.length}人</span>`;
+                } else {
+                    divider.innerHTML = `<span>${group.label}</span><span class="badge-group">${group.teachers.length}人</span>`;
+                }
+                container.appendChild(divider);
+
+                group.teachers.forEach(teacher => {
+                    const isSelected = selected.includes(teacher);
+                    const disabled = selected.length >= 6 && !isSelected;
+
+                    const lbl = document.createElement('label');
+                    if (disabled) lbl.classList.add('disabled');
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = teacher;
+                    cb.checked = isSelected;
+                    cb.disabled = disabled;
+
+                    cb.addEventListener('change', function() {
+                        handleLeaderTeacherCheck(teacher, this.checked);
+                    });
+
+                    lbl.appendChild(cb);
+                    lbl.appendChild(document.createTextNode(teacher));
+                    container.appendChild(lbl);
+                });
+            });
+
+            // 更新计数
+            document.getElementById('leaderSelectedCount').textContent = selected.length;
+            document.getElementById('leaderGroup1Count').textContent = group1SelectedCount;
+        }
+
+        function handleLeaderTeacherCheck(teacher, checked) {
+            const selected = leaderTempChoices.selected;
+            if (checked) {
+                if (selected.length >= 6) {
+                    showToast('最多只能选择 6 位教师！', 'error');
+                    renderLeaderSelection();
+                    return;
+                }
+                if (!selected.includes(teacher)) {
+                    selected.push(teacher);
+                }
+            } else {
+                const idx = selected.indexOf(teacher);
+                if (idx !== -1) selected.splice(idx, 1);
+            }
+            renderLeaderSelection();
+            updateLeaderStatus();
+        }
+
+        function updateLeaderStatus() {
+            const count = leaderTempChoices.selected.length;
+            const g1Count = leaderTempChoices.selected.filter(t => GROUP1_TEACHERS.includes(t)).length;
+            const statusEl = document.getElementById('leaderStatus');
+            statusEl.textContent = `已选 ${count} / 6 人 · 第一组 ${g1Count} / 2`;
+            if (count === 6 && g1Count >= 2) {
+                statusEl.className = 'status-msg success';
+                statusEl.textContent = '已选满 6 人（第一组满足），可以提交！';
+            } else if (count === 6 && g1Count < 2) {
+                statusEl.className = 'status-msg error';
+                statusEl.textContent = `已选 6 人，但第一组仅 ${g1Count} 人，还需 ${2 - g1Count} 人！`;
+            } else {
+                statusEl.className = 'status-msg';
+            }
+            document.getElementById('leaderSelectedCount').textContent = count;
+            document.getElementById('leaderGroup1Count').textContent = g1Count;
+        }
+
+        // 班长提交
+        document.getElementById('leaderSubmitBtn').addEventListener('click', async function() {
+            const name = document.getElementById('leaderNameDisplay').textContent;
+            if (!name || name === '——') {
+                showToast('请先登录', 'error');
+                return;
+            }
+
+            const selected = leaderTempChoices.selected;
+            if (selected.length !== 6) {
+                showToast('请选择恰好 6 位教师作为搭档', 'error');
+                return;
+            }
+
+            // 检查第一组是否至少选了 2 人
+            const g1Count = selected.filter(t => GROUP1_TEACHERS.includes(t)).length;
+            if (g1Count < 2) {
+                showToast(`请你从第一组教师中选择至少 2 人！（当前仅 ${g1Count} 人）`, 'error');
+                return;
+            }
+
+            // 检查重复
+            const unique = new Set(selected);
+            if (unique.size !== 6) {
+                showToast('选择的人员有重复，请检查！', 'error');
+                return;
+            }
+
+            // 提交到后端
+            const result = await saveLeaderData(name, [...selected]);
+            if (result.success) {
+                showThanks();
+            } else {
+                showToast('提交失败：' + (result.error || '请重试'), 'error');
+            }
+        });
+
+        // ======================================================================
+        //  教师选择页面（保持不变，但调整了教师分组显示）
+        // ======================================================================
+
+        async function loadTeacherChoices(name) {
+            const allData = await getTeacherData();
+            const saved = allData[name] || { leaders: [], teachers: [] };
+            const validTeachers = new Set(TEACHER_NAMES);
+            const validLeaders = new Set(LEADER_NAMES);
+            const leaders = (saved.leaders || []).filter(l => validLeaders.has(l));
+            const teachers = (saved.teachers || []).filter(t => validTeachers.has(t) && t !== name);
+            teacherTempChoices.leaders = leaders.slice(0, 3);
+            teacherTempChoices.teachers = teachers.slice(0, 3);
+            renderTeacherChoices(name);
+            updateTeacherStatus();
+        }
+
+        function renderTeacherChoices(name) {
+            // 班长选择（无分组）
+            const leaderContainer = document.getElementById('teacherLeaderCheckGroup');
+            leaderContainer.innerHTML = '';
+            LEADER_NAMES.forEach(leader => {
+                const checked = teacherTempChoices.leaders.includes(leader);
+                const disabled = teacherTempChoices.leaders.length >= 3 && !checked;
+                const lbl = document.createElement('label');
+                if (disabled) lbl.classList.add('disabled');
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = leader;
+                cb.checked = checked;
+                cb.disabled = disabled;
+                cb.dataset.type = 'leader';
+                cb.addEventListener('change', function() {
+                    handleTeacherCheck('leader', leader, this.checked, name);
+                });
+                lbl.appendChild(cb);
+                lbl.appendChild(document.createTextNode(leader));
+                leaderContainer.appendChild(lbl);
+            });
+
+            // 教师选择（分组显示）
+            const teacherContainer = document.getElementById('teacherTeacherCheckGroup');
+            teacherContainer.innerHTML = '';
+
+            TEACHER_GROUPS.forEach(group => {
+                const divider = document.createElement('div');
+                divider.className = 'group-divider';
+                divider.innerHTML = `<span>${group.label}</span><span class="badge-group">${group.teachers.length}人</span>`;
+                teacherContainer.appendChild(divider);
+
+                group.teachers.forEach(t => {
+                    if (t === name) return;
+                    const checked = teacherTempChoices.teachers.includes(t);
+                    const disabled = teacherTempChoices.teachers.length >= 3 && !checked;
+                    const lbl = document.createElement('label');
+                    if (disabled) lbl.classList.add('disabled');
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = t;
+                    cb.checked = checked;
+                    cb.disabled = disabled;
+                    cb.dataset.type = 'teacher';
+                    cb.addEventListener('change', function() {
+                        handleTeacherCheck('teacher', t, this.checked, name);
+                    });
+                    lbl.appendChild(cb);
+                    lbl.appendChild(document.createTextNode(t));
+                    teacherContainer.appendChild(lbl);
+                });
+            });
+
+            document.getElementById('teacherLeaderCount').textContent = teacherTempChoices.leaders.length;
+            document.getElementById('teacherTeacherCount').textContent = teacherTempChoices.teachers.length;
+        }
+
+        function handleTeacherCheck(type, value, checked, name) {
+            if (type === 'leader') {
+                if (checked) {
+                    if (teacherTempChoices.leaders.length >= 3) {
+                        showToast('最多选择 3 位班长', 'error');
+                        renderTeacherChoices(name);
+                        return;
+                    }
+                    if (!teacherTempChoices.leaders.includes(value)) {
+                        teacherTempChoices.leaders.push(value);
+                    }
+                } else {
+                    const idx = teacherTempChoices.leaders.indexOf(value);
+                    if (idx !== -1) teacherTempChoices.leaders.splice(idx, 1);
+                }
+            } else {
+                if (checked) {
+                    if (teacherTempChoices.teachers.length >= 3) {
+                        showToast('最多选择 3 位组员教师', 'error');
+                        renderTeacherChoices(name);
+                        return;
+                    }
+                    if (!teacherTempChoices.teachers.includes(value)) {
+                        teacherTempChoices.teachers.push(value);
+                    }
+                } else {
+                    const idx = teacherTempChoices.teachers.indexOf(value);
+                    if (idx !== -1) teacherTempChoices.teachers.splice(idx, 1);
+                }
+            }
+            renderTeacherChoices(name);
+            updateTeacherStatus();
+        }
+
+        function updateTeacherStatus() {
+            const lc = teacherTempChoices.leaders.length;
+            const tc = teacherTempChoices.teachers.length;
+            const statusEl = document.getElementById('teacherStatus');
+            statusEl.textContent = `已选 ${lc} 位班长 + ${tc} 位教师`;
+            if (lc === 3 && tc === 3) {
+                statusEl.className = 'status-msg success';
+                statusEl.textContent = '已选满 3 位班长和 3 位教师，可以提交！';
+            } else {
+                statusEl.className = 'status-msg';
+            }
+            document.getElementById('teacherLeaderCount').textContent = lc;
+            document.getElementById('teacherTeacherCount').textContent = tc;
+        }
+
+        document.getElementById('teacherSubmitBtn').addEventListener('click', async function() {
+            const name = document.getElementById('teacherNameDisplay').textContent;
+            if (!name || name === '——') {
+                showToast('请先登录', 'error');
+                return;
+            }
+
+            if (teacherTempChoices.leaders.length !== 3) {
+                showToast('请选择恰好 3 位班长', 'error');
+                return;
+            }
+            if (teacherTempChoices.teachers.length !== 3) {
+                showToast('请选择恰好 3 位组员教师', 'error');
+                return;
+            }
+            if (teacherTempChoices.teachers.includes(name)) {
+                showToast('不能选择自己作为组员！', 'error');
+                return;
+            }
+            const uniqueTeachers = new Set(teacherTempChoices.teachers);
+            if (uniqueTeachers.size !== 3) {
+                showToast('组员教师有重复，请检查！', 'error');
+                return;
+            }
+
+            const result = await saveTeacherData(name, [...teacherTempChoices.leaders], [...teacherTempChoices.teachers]);
+            if (result.success) {
+                showThanks();
+            } else {
+                showToast('提交失败：' + (result.error || '请重试'), 'error');
+            }
+        });
+
+        // ======================================================================
+        //  初始化
+        // ======================================================================
+
+        console.log('幼儿园班级组合系统已加载 (富佳妍已移除，新增张冉，教师分两组，班长选6人)');
+        console.log(`班长 ${LEADER_NAMES.length} 人，教师 ${TEACHER_NAMES.length} 人`);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' && e.ctrlKey && e.shiftKey) {
+                e.preventDefault();
+                if (currentRole === 'leader' && currentName) loadLeaderChoices(currentName);
+                else if (currentRole === 'teacher' && currentName) loadTeacherChoices(currentName);
+                showToast('已刷新', 'info');
+            }
+        });
+    </script>
+
+    <!-- 感谢参与弹窗 -->
+    <div id="thanksOverlay" class="thanks-overlay" style="display:none;">
+        <div class="thanks-card">
+            <img src="logo.png" alt="蒲英向阳" style="width:100px;margin-bottom:22px;">
+            <h2>感谢你的参与</h2>
+            <p>你的选择已成功提交<br>我们会根据大家的选择进行班级组合<br>期待与你一起开启新的旅程</p>
+            <button class="btn btn-primary" onclick="closeThanks()">完成</button>
+        </div>
+    </div>
+
+</body>
+</html>

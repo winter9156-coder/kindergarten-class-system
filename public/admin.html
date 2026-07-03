@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>后台管理 - 班级组合系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f0e6d8 0%, #d4c4b0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        #app {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 48px 48px 32px 32px;
+            padding: 30px 35px 40px;
+            box-shadow: 0 20px 60px rgba(80, 60, 40, 0.18),
+                        0 4px 20px rgba(80, 60, 40, 0.10);
+            border: 1px solid rgba(200, 170, 140, 0.4);
+            animation: floatApp 6s ease-in-out infinite;
+        }
+        @keyframes floatApp {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 2px dashed #d4c0a8;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a3020;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h1 .admin-icon {
+            width: 36px;
+            height: 36px;
+            background: #4a3020;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f0d5c0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 12px rgba(100, 70, 50, 0.10),
+                        0 2px 4px rgba(100, 70, 50, 0.06);
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(100, 70, 50, 0.16);
+        }
+        .btn-primary {
+            background: #5e3e2b;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #4a3020;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(80, 50, 30, 0.30);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #5e3e2b;
+            color: #5e3e2b;
+        }
+        .btn-outline:hover {
+            background: #5e3e2b;
+            color: #fff;
+        }
+        .btn-danger {
+            background: #c97b68;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #b5654b;
+        }
+        .btn-back {
+            background: #f0d5c0;
+            color: #5e3e2b;
+            border: none;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(100, 70, 50, 0.08);
+        }
+        .btn-back:hover {
+            background: #e6bfa8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(100, 70, 50, 0.12);
+        }
+
+        /* 登录验证 */
+        .auth-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(40, 25, 15, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: safe center;
+            justify-content: center;
+            padding: 60px 20px;
+            z-index: 999;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .auth-box {
+            background: #fff9f5;
+            border-radius: 32px;
+            padding: 36px 32px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(50, 30, 15, 0.30);
+            max-width: 420px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes floatBox {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .auth-box h2 {
+            font-size: 24px;
+            color: #4a3020;
+            margin-bottom: 8px;
+        }
+        .auth-box p {
+            color: #7a5f4e;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .auth-box input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 30px;
+            border: 2px solid #d4c0a8;
+            font-size: 16px;
+            background: #fffcf9;
+            color: #3d2a1e;
+            outline: none;
+            text-align: center;
+            transition: 0.2s;
+            margin-bottom: 16px;
+            letter-spacing: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+        }
+        .auth-box input:focus {
+            border-color: #5e3e2b;
+            box-shadow: 0 0 0 4px rgba(94, 62, 43, 0.10);
+        }
+        .auth-box .btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+        }
+        .auth-error {
+            color: #c97b68;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        /* 统计 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: #fffbf8;
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid #e8d5c8;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(100, 70, 50, 0.05);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(100, 70, 50, 0.12);
+        }
+        .stat-card .num {
+            font-size: 36px;
+            font-weight: 700;
+            color: #5e3e2b;
+        }
+        .stat-card .lbl {
+            font-size: 14px;
+            color: #7a5f4e;
+            margin-top: 4px;
+        }
+        .stat-card .num.warn {
+            color: #c97b68;
+        }
+        .stat-card .num.ok {
+            color: #5f8b78;
+        }
+        .result-table-wrap {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: #fffbf8;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #e8d5c8;
+        }
+        .result-table th {
+            background: #f0ded0;
+            color: #4a3020;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .result-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0e0d4;
+            vertical-align: top;
+        }
+        .result-table tr:last-child td { border-bottom: none; }
+        .result-table .rank-col {
+            width: 60px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .rank-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .rank-1 { background: #d48b7a; }
+        .rank-2 { background: #c9a07a; }
+        .rank-3 { background: #b5a07a; }
+        .rank-other { background: #c4b5a8; }
+        .count-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 160px;
+        }
+        .count-bar {
+            height: 18px;
+            border-radius: 9px;
+            background: #d48b7a;
+            transition: width 0.6s ease;
+            min-width: 4px;
+        }
+        .count-bar-num {
+            font-weight: 700;
+            font-size: 14px;
+            color: #4a3020;
+            white-space: nowrap;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 2px 4px 2px 0;
+        }
+        .tag.leader {
+            background: #5e3e2b;
+            color: #fff;
+        }
+        .tag.teacher {
+            background: #b5cfc0;
+            color: #2d4a3a;
+        }
+        .tag.group-tag {
+            background: #e8d5c8;
+            font-weight: 500;
+            color: #4a3020;
+        }
+        .tag.group1 {
+            background: #fceee8;
+            color: #b55a3a;
+            border: 1px solid #f0c0a8;
+        }
+        .tag.group2 {
+            background: #e8f0ec;
+            color: #3a6a5a;
+            border: 1px solid #b0d0c0;
+        }
+        /* 自定义确认弹窗 */
+        .confirm-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(40, 25, 15, 0.55);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            background: #fff9f5;
+            border-radius: 28px;
+            padding: 32px 30px 24px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(50, 30, 15, 0.35);
+            max-width: 400px;
+            width: 90%;
+        }
+        .confirm-box h3 {
+            font-size: 20px;
+            color: #4a3020;
+            margin: 0 0 12px 0;
+        }
+        .confirm-box p {
+            color: #7a5f4e;
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .confirm-actions .btn {
+            min-width: 100px;
+        }
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: #4a3020;
+            color: #fff;
+            padding: 16px 28px;
+            border-radius: 30px;
+            font-size: 15px;
+            box-shadow: 0 12px 40px rgba(40, 25, 15, 0.25);
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            max-width: 420px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .toast.success { background: #5f8b78; }
+        .toast.error { background: #c97b68; }
+        h3 { margin: 28px 0 12px; color: #4a3020; font-size: 18px; }
+        .match-pair {
+            background: #f5e8df;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            color: #4a3020;
+            display: inline-block;
+            margin: 3px 8px 3px 0;
+            transition: all 0.2s;
+        }
+        .match-pair:hover {
+            background: #ebd5c4;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            #app { padding: 16px 14px 24px; border-radius: 28px; }
+            .header h1 { font-size: 20px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .header-actions { flex-direction: column; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div id="toast" class="toast"></div>
+
+        <!-- 登录遮罩 -->
+        <div id="authOverlay" class="auth-overlay">
+            <div class="auth-box">
+                <h2>后台管理系统</h2>
+                <p>请输入管理密码以访问系统后端</p>
+                <input type="password" id="pwdInput" placeholder="输入密码" maxlength="20" />
+                <button class="btn btn-primary" onclick="checkPassword()">验证进入</button>
+                <div class="auth-error" id="authError"></div>
+                <div style="margin-top: 16px;">
+                    <a href="kindergarten-class-system.html" style="color:#7a5f4e;font-size:13px;text-decoration:none;">返回前台</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="header">
+            <h1>
+                <span class="admin-icon">管</span>
+                <span>后台管理</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="refreshView()">刷新数据</button>
+                <button class="btn btn-danger" onclick="clearAllData()">清空所有数据</button>
+                <a href="kindergarten-class-system.html" class="btn btn-back">返回前台</a>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid"><!-- JS渲染 --></div>
+
+        <div id="content"><!-- JS渲染 --></div>
+
+        <!-- 自定义确认弹窗 -->
+        <div id="confirmOverlay" class="confirm-overlay">
+            <div class="confirm-box">
+                <h3 id="confirmTitle">确认操作</h3>
+                <p id="confirmMsg">确定要执行此操作吗？</p>
+                <div class="confirm-actions">
+                    <button class="btn btn-outline" id="confirmCancel">取消</button>
+                    <button class="btn btn-danger" id="confirmOk">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        const ADMIN_PASSWORD = 'admin123';
+
+        const LEADER_NAMES = [
+            '刘沂柠', '杨柳', '郭宇涵', '张雨晴', '李昕怡',
+            '蔡涵', '芦丽', '王文雪', '徐可新', '张建梅', '孙乐'
+        ];
+        const TEACHER_NAMES = [
+            '李亚洁', '纪思曼', '姜媛', '鲁晨曦', '李梦',
+            '尹亭蕊', '马正颖', '张斯婕', '苏琦蕊',
+            '李雪彤', '邢佳杰', '王旻姣', '刘茜', '谷雨',
+            '王玉', '徐佳', '程紫玉', '田鑫颖', '李一帆',
+            '伊金宝', '张淼', '张冉', '李晓娇', '周岩'
+        ];
+        const GROUP1_TEACHERS = [
+            '李梦', '王旻姣', '伊金宝', '刘茜', '鲁晨曦',
+            '姜媛', '邢佳杰', '田鑫颖', '王玉', '周岩',
+            '马正颖', '李一帆'
+        ];
+        const GROUP2_TEACHERS = TEACHER_NAMES.filter(n => !GROUP1_TEACHERS.includes(n));
+
+        let authenticated = false;
+
+        function showToast(msg, type='info', dur=2800) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast ' + type + ' show';
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.classList.remove('show'), dur);
+        }
+
+        function checkPassword() {
+            const val = document.getElementById('pwdInput').value;
+            if (val === ADMIN_PASSWORD) {
+                authenticated = true;
+                document.getElementById('authOverlay').style.display = 'none';
+                renderView();
+            } else {
+                document.getElementById('authError').textContent = '密码错误，请重试';
+                document.getElementById('pwdInput').value = '';
+                document.getElementById('pwdInput').focus();
+            }
+        }
+
+        document.getElementById('pwdInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        function renderView() {
+            if (!authenticated) {
+                document.getElementById('authOverlay').style.display = 'flex';
+                return;
+            }
+            // 异步加载数据
+            loadAndRender();
+        }
+
+        async function loadAndRender() {
+            const allData = await apiGetAllData();
+            const ld = allData?.leaders || {};
+            const td = allData?.teachers || {};
+            const lsub = Object.keys(ld).filter(k => ld[k]?.submitted).length;
+            const tsub = Object.keys(td).filter(k => td[k]?.submitted).length;
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="num">${LEADER_NAMES.length}</div><div class="lbl">班长总数</div></div>
+                <div class="stat-card"><div class="num ${lsub === LEADER_NAMES.length ? 'ok' : (lsub === 0 ? 'warn' : '')}">${lsub}</div><div class="lbl">已提交班长</div></div>
+                <div class="stat-card"><div class="num">${TEACHER_NAMES.length}</div><div class="lbl">教师总数</div></div>
+                <div class="stat-card"><div class="num ${tsub === TEACHER_NAMES.length ? 'ok' : (tsub === 0 ? 'warn' : '')}">${tsub}</div><div class="lbl">已提交教师</div></div>
+            `;
+
+            let h = '';
+
+            // ---- 教师被选次数排行 ----
+            h += '<h3>教师被选次数排行（从多到少）</h3>';
+            // 统计每名教师被几位班长选择
+            const teacherVoteCount = {};
+            TEACHER_NAMES.forEach(t => { teacherVoteCount[t] = 0; });
+            LEADER_NAMES.forEach(name => {
+                const d = ld[name];
+                if (d && d.submitted) {
+                    const sel = (d.selected || []).filter(t => TEACHER_NAMES.includes(t));
+                    sel.forEach(t => { teacherVoteCount[t] = (teacherVoteCount[t] || 0) + 1; });
+                }
+            });
+            // 按票数降序排列
+            const rankedTeachers = Object.entries(teacherVoteCount)
+                .sort((a, b) => b[1] - a[1]);
+            const maxVotes = rankedTeachers.length > 0 ? rankedTeachers[0][1] : 0;
+
+            h += '<div class="result-table-wrap"><table class="result-table"><thead><tr>';
+            h += '<th>排名</th><th>教师</th><th>所属组</th><th>被选次数</th>';
+            h += '</tr></thead><tbody>';
+            rankedTeachers.forEach(([name, count], idx) => {
+                const rank = idx + 1;
+                const isG1 = GROUP1_TEACHERS.includes(name);
+                const barWidth = maxVotes > 0 ? (count / maxVotes * 100) : 0;
+                let rankClass = 'rank-other';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+
+                h += `<tr>
+                    <td class="rank-col"><span class="rank-badge ${rankClass}">${rank}</span></td>
+                    <td><strong>${name}</strong></td>
+                    <td><span class="tag ${isG1 ? 'group1' : 'group2'}">${isG1 ? '第一组' : '第二组'}</span></td>
+                    <td>
+                        <div class="count-bar-wrap">
+                            <div class="count-bar" style="width: ${barWidth}%"></div>
+                            <span class="count-bar-num">${count} 票</span>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            h += '</tbody></table></div>';
+
+            // ---- 每名教师：哪些班长没有选择自己 ----
+            h += '<h3>教师「未被选择」排查</h3>';
+            h += '<p style="color:#7a5f4e;font-size:13px;margin-bottom:12px;">列出已提交的班长中，哪些人<strong>没有</strong>选择该教师</p>';
+            // 收集所有已提交班长的选择
+            const submittedLeaders = [];
+            const leaderSelMap = {};
+            LEADER_NAMES.forEach(name => {
+                const d = ld[name];
+                if (d && d.submitted) {
+                    submittedLeaders.push(name);
+                    leaderSelMap[name] = new Set((d.selected || []).filter(t => TEACHER_NAMES.includes(t)));
+                }
+            });
+            if (submittedLeaders.length === 0) {
+                h += '<p style="color:#a08070;">暂无班长提交，无法统计</p>';
+            } else {
+                h += '<div class="result-table-wrap"><table class="result-table"><thead><tr>';
+                h += '<th>教师</th><th>所属组</th><th>未选TA的班长</th><th>未选人数</th>';
+                h += '</tr></thead><tbody>';
+                TEACHER_NAMES.forEach(name => {
+                    const notSelectedBy = submittedLeaders.filter(l => {
+                        return !(leaderSelMap[l] || new Set()).has(name);
+                    });
+                    const isG1 = GROUP1_TEACHERS.includes(name);
+                    const notTags = notSelectedBy.length > 0
+                        ? notSelectedBy.map(l => `<span class="tag leader" style="opacity:0.55;background:#c97b68;">${l}</span>`).join(' ')
+                        : '<span style="color:#5f8b78;font-weight:600;">已被全部班长选择</span>';
+                    h += `<tr>
+                        <td><strong>${name}</strong></td>
+                        <td><span class="tag ${isG1 ? 'group1' : 'group2'}">${isG1 ? '第一组' : '第二组'}</span></td>
+                        <td style="max-width:400px;">${notTags}</td>
+                        <td>${notSelectedBy.length} / ${submittedLeaders.length}</td>
+                    </tr>`;
+                });
+                h += '</tbody></table></div>';
+            }
+
+            // ---- 班长选择详情 ----
+            h += '<h3>班长选择详情</h3>';
+            h += '<div class="result-table-wrap"><table class="result-table"><thead><tr><th>班长</th><th>选择的第一组教师</th><th>选择的第二组教师</th><th>状态</th></tr></thead><tbody>';
+            LEADER_NAMES.forEach(name => {
+                const d = ld[name];
+                let g1tags = '-', g2tags = '-', status = '未提交';
+                if (d && d.submitted) {
+                    const sel = (d.selected || []).filter(t => TEACHER_NAMES.includes(t));
+                    const g1 = sel.filter(t => GROUP1_TEACHERS.includes(t));
+                    const g2 = sel.filter(t => !GROUP1_TEACHERS.includes(t));
+                    g1tags = g1.map(t => `<span class="tag group1">${t}</span>`).join(' ') || '（无）';
+                    g2tags = g2.map(t => `<span class="tag group2">${t}</span>`).join(' ') || '（无）';
+                    status = '已提交';
+                } else if (d) {
+                    const sel = (d.selected || []).filter(t => TEACHER_NAMES.includes(t));
+                    const g1 = sel.filter(t => GROUP1_TEACHERS.includes(t));
+                    const g2 = sel.filter(t => !GROUP1_TEACHERS.includes(t));
+                    g1tags = g1.map(t => `<span class="tag group1">${t}</span>`).join(' ') || '（无）';
+                    g2tags = g2.map(t => `<span class="tag group2">${t}</span>`).join(' ') || '（无）';
+                    status = '草稿';
+                }
+                h += `<tr>
+                    <td><strong>${name}</strong></td>
+                    <td>${g1tags}</td>
+                    <td>${g2tags}</td>
+                    <td>${status}</td>
+                </tr>`;
+            });
+            h += '</tbody></table></div>';
+
+            // ---- 教师选择详情 ----
+            h += '<h3>教师选择详情</h3>';
+            h += '<div class="result-table-wrap"><table class="result-table"><thead><tr><th>教师</th><th>选择的班长</th><th>选择的组员教师</th><th>状态</th></tr></thead><tbody>';
+            TEACHER_NAMES.forEach(name => {
+                const d = td[name];
+                let leaders = '-', teachers = '-', status = '未提交';
+                if (d && d.submitted) {
+                    const fl = (d.leaders || []).filter(l => LEADER_NAMES.includes(l));
+                    const ft = (d.teachers || []).filter(t => TEACHER_NAMES.includes(t) && t !== name);
+                    leaders = fl.map(l => `<span class="tag leader">${l}</span>`).join(' ') || '（无）';
+                    teachers = ft.map(t => `<span class="tag teacher">${t}</span>`).join(' ') || '（无）';
+                    status = '已提交';
+                } else if (d) {
+                    const fl = (d.leaders || []).filter(l => LEADER_NAMES.includes(l));
+                    const ft = (d.teachers || []).filter(t => TEACHER_NAMES.includes(t) && t !== name);
+                    leaders = fl.map(l => `<span class="tag leader">${l}</span>`).join(' ') || '（无）';
+                    teachers = ft.map(t => `<span class="tag teacher">${t}</span>`).join(' ') || '（无）';
+                    status = '草稿';
+                }
+                h += `<tr>
+                    <td><strong>${name}</strong></td>
+                    <td>${leaders}</td>
+                    <td>${teachers}</td>
+                    <td>${status}</td>
+                </tr>`;
+            });
+            h += '</tbody></table></div>';
+
+            // ---- 互选匹配 ----
+            h += '<h3>互选匹配一览</h3>';
+            const lcm = {};
+            LEADER_NAMES.forEach(name => {
+                const d = ld[name];
+                if (d && d.submitted) {
+                    lcm[name] = (d.selected || []).filter(t => TEACHER_NAMES.includes(t));
+                } else lcm[name] = [];
+            });
+            const tcm = {};
+            TEACHER_NAMES.forEach(name => {
+                const d = td[name];
+                if (d && d.submitted) {
+                    tcm[name] = (d.leaders || []).filter(l => LEADER_NAMES.includes(l));
+                } else tcm[name] = [];
+            });
+
+            let pairs = [];
+            LEADER_NAMES.forEach(l => {
+                (lcm[l] || []).forEach(t => {
+                    if ((tcm[t] || []).includes(l)) pairs.push({leader: l, teacher: t});
+                });
+            });
+
+            if (pairs.length === 0) {
+                h += '<p style="color:#a08070;">暂无互选配对（需双方都已提交且互相选择）</p>';
+            } else {
+                h += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;">';
+                const seen = new Set();
+                pairs.forEach(p => {
+                    const k = `${p.leader}|${p.teacher}`;
+                    if (!seen.has(k)) {
+                        seen.add(k);
+                        h += `<span class="match-pair">${p.leader} ↔ ${p.teacher}</span>`;
+                    }
+                });
+                h += '</div>';
+            }
+
+            document.getElementById('content').innerHTML = h;
+        }
+
+        // ----- 自定义确认弹窗 -----
+        let confirmCallback = null;
+
+        function showConfirm(title, msg, onOk) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMsg').textContent = msg;
+            confirmCallback = onOk;
+            document.getElementById('confirmOverlay').classList.add('show');
+        }
+
+        function hideConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('show');
+            confirmCallback = null;
+        }
+
+        document.getElementById('confirmCancel').addEventListener('click', hideConfirm);
+        document.getElementById('confirmOk').addEventListener('click', function() {
+            hideConfirm();
+            if (confirmCallback) confirmCallback();
+        });
+        // 点击遮罩外部关闭
+        document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+            if (e.target === this) hideConfirm();
+        });
+
+        // ----- 带自定义弹窗的刷新 -----
+        function refreshView() {
+            const ac = authenticated;
+            if (!ac) {
+                document.getElementById('authOverlay').style.display = 'flex';
+                return;
+            }
+            renderView();
+            showToast('数据已刷新', 'success');
+        }
+
+        async function doClear() {
+            try {
+                const result = await apiAdminClear('admin123');
+                if (result.success) {
+                    showToast('所有数据已清空', 'success');
+                    renderView();
+                } else {
+                    showToast('清空失败：' + (result.error || '权限不足'), 'error');
+                }
+            } catch (e) {
+                showToast('清空失败：' + e.message, 'error');
+            }
+        }
+
+        function clearAllData() {
+            const ac = authenticated;
+            if (!ac) {
+                document.getElementById('authOverlay').style.display = 'flex';
+                return;
+            }
+            showConfirm(
+                '清空所有数据',
+                '确定要清空所有班长和教师的选择数据吗？此操作不可撤销！',
+                doClear
+            );
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'r') {
+                e.preventDefault();
+                renderView();
+                showToast('已刷新', 'info');
+            }
+        });
+    </script>
+</body>
+</html>
