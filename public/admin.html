@@ -762,8 +762,9 @@
             try {
                 const result = await apiAdminClear('admin123');
                 if (result.success) {
-                    showToast('所有数据已清空', 'success');
-                    renderView();
+                    showToast('所有数据已清空，页面即将刷新...', 'success');
+                    // 延迟后刷新页面，确保看到清空结果
+                    setTimeout(() => { location.reload(); }, 1200);
                 } else {
                     showToast('清空失败：' + (result.error || '权限不足'), 'error');
                 }
