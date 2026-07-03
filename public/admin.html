@@ -585,38 +585,96 @@
             });
             h += '</tbody></table></div>';
 
-            // ---- 每名教师：哪些班长没有选择自己 ----
-            h += '<h3>教师「未被选择」排查</h3>';
-            h += '<p style="color:#7a5f4e;font-size:13px;margin-bottom:12px;">列出已提交的班长中，哪些人<strong>没有</strong>选择该教师</p>';
-            // 收集所有已提交班长的选择
-            const submittedLeaders = [];
-            const leaderSelMap = {};
+            // ---- 全员「未被选择」排查 ----
+            // 班长对教师的选择；教师对班长+同组教师的选择
+            h += '<h3>全员「未被选择」排查</h3>';
+            h += '<p style="color:#7a5f4e;font-size:13px;margin-bottom:12px;">对每一名人员，列出<strong>已提交</strong>的相关人员中<strong>没有</strong>选择TA的人</p>';
+
+            // 收集已提交数据
+            const subLeaders = [];       // 已提交的班长
+            const subTeachers = [];      // 已提交的教师
+            const leaderSel = {};        // { 班长名: Set[被选教师名] }
+            const teacherLeaderSel = {}; // { 教师名: Set[被选班长名] }
+            const teacherPeerSel = {};   // { 教师名: Set[被选组员教师名] }
+
             LEADER_NAMES.forEach(name => {
                 const d = ld[name];
                 if (d && d.submitted) {
-                    submittedLeaders.push(name);
-                    leaderSelMap[name] = new Set((d.selected || []).filter(t => TEACHER_NAMES.includes(t)));
+                    subLeaders.push(name);
+                    leaderSel[name] = new Set((d.selected || []).filter(t => TEACHER_NAMES.includes(t)));
                 }
             });
-            if (submittedLeaders.length === 0) {
-                h += '<p style="color:#a08070;">暂无班长提交，无法统计</p>';
+            TEACHER_NAMES.forEach(name => {
+                const d = td[name];
+                if (d && d.submitted) {
+                    subTeachers.push(name);
+                    teacherLeaderSel[name] = new Set((d.leaders || []).filter(l => LEADER_NAMES.includes(l)));
+                    teacherPeerSel[name] = new Set((d.teachers || []).filter(t => TEACHER_NAMES.includes(t) && t !== name));
+                }
+            });
+
+            const hasLeaderData = subLeaders.length > 0;
+            const hasTeacherData = subTeachers.length > 0;
+
+            if (!hasLeaderData && !hasTeacherData) {
+                h += '<p style="color:#a08070;">暂无任何人提交，无法统计</p>';
             } else {
+                // ===== 班长排查：哪些教师没选该班长 =====
+                h += '<h4 style="margin-top:16px;color:#b5654b;">班长（被教师选择情况）</h4>';
                 h += '<div class="result-table-wrap"><table class="result-table"><thead><tr>';
-                h += '<th>教师</th><th>所属组</th><th>未选TA的班长</th><th>未选人数</th>';
+                h += '<th>班长</th><th>没选TA的教师</th><th>未选 / 已提交教师</th>';
+                h += '</tr></thead><tbody>';
+                LEADER_NAMES.forEach(name => {
+                    if (!hasTeacherData) {
+                        h += `<tr><td><strong>${name}</strong></td><td colspan="2" style="color:#a08070;">暂无教师提交</td></tr>`;
+                        return;
+                    }
+                    const notBy = subTeachers.filter(t => !(teacherLeaderSel[t] || new Set()).has(name));
+                    const tags = notBy.length > 0
+                        ? notBy.map(t => `<span class="tag teacher" style="opacity:0.55;">${t}</span>`).join(' ')
+                        : '<span style="color:#5f8b78;font-weight:600;">已被全部教师选择</span>';
+                    h += `<tr><td><strong>${name}</strong></td><td style="max-width:500px;">${tags}</td><td>${notBy.length} / ${subTeachers.length}</td></tr>`;
+                });
+                h += '</tbody></table></div>';
+
+                // ===== 教师排查：班长 + 组员教师 =====
+                h += '<h4 style="margin-top:20px;color:#b5654b;">教师（被班长&组员教师选择情况）</h4>';
+                h += '<div class="result-table-wrap"><table class="result-table"><thead><tr>';
+                h += '<th>教师</th><th>所属组</th><th>没选TA的班长</th><th>没选TA的组员教师</th><th>未选班长 / 已提交</th><th>未选组员 / 已提交</th>';
                 h += '</tr></thead><tbody>';
                 TEACHER_NAMES.forEach(name => {
-                    const notSelectedBy = submittedLeaders.filter(l => {
-                        return !(leaderSelMap[l] || new Set()).has(name);
-                    });
                     const isG1 = GROUP1_TEACHERS.includes(name);
-                    const notTags = notSelectedBy.length > 0
-                        ? notSelectedBy.map(l => `<span class="tag leader" style="opacity:0.55;background:#c97b68;">${l}</span>`).join(' ')
-                        : '<span style="color:#5f8b78;font-weight:600;">已被全部班长选择</span>';
+                    // 班长没选该教师
+                    let leaderNotTags, leaderNotCount;
+                    if (!hasLeaderData) {
+                        leaderNotTags = '<span style="color:#a08070;">暂无班长提交</span>';
+                        leaderNotCount = '-';
+                    } else {
+                        const notByLeaders = subLeaders.filter(l => !(leaderSel[l] || new Set()).has(name));
+                        leaderNotTags = notByLeaders.length > 0
+                            ? notByLeaders.map(l => `<span class="tag leader" style="opacity:0.55;background:#c97b68;">${l}</span>`).join(' ')
+                            : '<span style="color:#5f8b78;font-weight:600;">已全选</span>';
+                        leaderNotCount = `${notByLeaders.length} / ${subLeaders.length}`;
+                    }
+                    // 组员教师没选该教师（排除自己）
+                    let peerNotTags, peerNotCount;
+                    if (!hasTeacherData) {
+                        peerNotTags = '<span style="color:#a08070;">暂无教师提交</span>';
+                        peerNotCount = '-';
+                    } else {
+                        const notByPeers = subTeachers.filter(t => t !== name && !(teacherPeerSel[t] || new Set()).has(name));
+                        peerNotTags = notByPeers.length > 0
+                            ? notByPeers.map(t => `<span class="tag teacher" style="opacity:0.55;">${t}</span>`).join(' ')
+                            : '<span style="color:#5f8b78;font-weight:600;">已全选</span>';
+                        peerNotCount = `${notByPeers.length} / ${subTeachers.length - 1}`;
+                    }
                     h += `<tr>
                         <td><strong>${name}</strong></td>
                         <td><span class="tag ${isG1 ? 'group1' : 'group2'}">${isG1 ? '第一组' : '第二组'}</span></td>
-                        <td style="max-width:400px;">${notTags}</td>
-                        <td>${notSelectedBy.length} / ${submittedLeaders.length}</td>
+                        <td style="max-width:300px;">${leaderNotTags}</td>
+                        <td style="max-width:400px;">${peerNotTags}</td>
+                        <td>${leaderNotCount}</td>
+                        <td>${peerNotCount}</td>
                     </tr>`;
                 });
                 h += '</tbody></table></div>';
